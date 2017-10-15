@@ -16,7 +16,7 @@
 // All subclasses need to respect this.
 typedef struct {
   unsigned int version;
-  char name[NAME_MAX_LENGTH];
+  char name[NAME_MAX_LENGTH + 1];
 } configData; 
  
   
@@ -40,7 +40,7 @@ public:
 protected:
   void* _data;
   unsigned int _version;
-  char _name[NAME_MAX_LENGTH];
+  char _name[NAME_MAX_LENGTH + 1];
   unsigned int _dataSize;
 };
 
