@@ -2,7 +2,7 @@
  *  Class to save to and restore from EEPROM a data structure containing a configuration 
  *  that needs to be persisted across resets and power off
  *  Xavier Grosjean 2017
- *  Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International Public License
+ *  MIT License 
  *
  */
  
