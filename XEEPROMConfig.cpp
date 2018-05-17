@@ -9,20 +9,14 @@
 #include <Arduino.h>
 #include "XEEPROMConfig.h"
 
-XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, const char* name) {
-  //Serial.println("XEEPROMConfigClass::XEEPROMConfigClass");
-  configData data;  // Default data object, made of a version number and a name.
-  XEEPROMConfigClass(version, name, (void*)&data, sizeof(data));
-}
-
-XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, const char* name, void* data, unsigned int dataSize) {
-  //Serial.println("XEEPROMConfigClass::XEEPROMConfigClass");
+XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, const char* name, unsigned int dataSize) {
+  Debug("XEEPROMConfigClass::XEEPROMConfigClass %d, %s, %d\n", version, name, dataSize);
   _version = version;
+  _dataSize = dataSize;
+  _data = (byte*)malloc(dataSize);
   // Copy name making sure there is no overflow
   strncpy(_name, name, NAME_MAX_LENGTH);
   _name[NAME_MAX_LENGTH] = 0;
-  _data = data;
-  _dataSize = dataSize;
 }
 
 /**
@@ -32,7 +26,7 @@ XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, const char* name, v
  *
  */
 void XEEPROMConfigClass::init(void) {
-  //Serial.println("XEEPROMConfigClass::init");
+  Debug("XEEPROMConfigClass::init\n");
   initFromEeprom();
   if (_version != getVersion()) {
     Serial.println("EEprom not up to date");
@@ -48,9 +42,9 @@ void XEEPROMConfigClass::init(void) {
  *
  */
 void XEEPROMConfigClass::initFromEeprom(void) {
-  //Serial.println("XEEPROMConfigClass::initFromEeprom");
+  Debug("XEEPROMConfigClass::initFromEeprom\n");
   unsigned int sizeConfig = getDataSize();
-  uint8_t* ptrConfig = (uint8_t *)_data;
+  uint8_t* ptrConfig = (uint8_t *)_getDataPtr();
   int i;
   EEPROM.begin(sizeConfig);
   for(i = 0; i < sizeConfig; i++) {
@@ -63,9 +57,9 @@ void XEEPROMConfigClass::initFromEeprom(void) {
  *
  */
 void XEEPROMConfigClass::saveToEeprom(void) {
-  //Serial.println("XEEPROMConfigClass::saveToEeprom");
+  Debug("XEEPROMConfigClass::saveToEeprom\n");
   unsigned int sizeConfig = getDataSize();
-  byte* ptrConfig = (byte *)_data;
+  byte* ptrConfig = (byte *)_getDataPtr();
   for(int i = 0; i < sizeConfig; i++) {
     EEPROM.write(i, *ptrConfig++);
   }
@@ -77,9 +71,9 @@ void XEEPROMConfigClass::saveToEeprom(void) {
  *
  */
 void XEEPROMConfigClass::setVersion(unsigned int version) {
-  //Serial.println("XEEPROMConfigClass::setVersion");
-  // Version is an unsigned it at the begining of the data structure
-  *(unsigned int *)_data = version;
+  Debug("XEEPROMConfigClass::setVersion\n");
+  // Version is an unsigned int at the begining of the data structure
+  *(unsigned int *)_getDataPtr() = version;
 }
 
 /**
@@ -87,10 +81,9 @@ void XEEPROMConfigClass::setVersion(unsigned int version) {
  *
  */
 unsigned int XEEPROMConfigClass::getVersion(void) {
-  //Serial.println("XEEPROMConfigClass::getVersion");
-  // Version is an unsigned it at the begining of the data structure
-  unsigned int* versionPtr = (unsigned int *)_data;
-  //Serial.println(*versionPtr);
+  // Version is an unsigned int at the begining of the data structure
+  unsigned int* versionPtr = (unsigned int *)_getDataPtr();
+  Debug("XEEPROMConfigClass::getVersion: %d\n", *versionPtr);
   return *versionPtr;
 }
 
@@ -99,8 +92,8 @@ unsigned int XEEPROMConfigClass::getVersion(void) {
  *
  */
 void XEEPROMConfigClass::setName(const char* name) {
-  //Serial.println("XEEPROMConfigClass::setName");
-  char* namePtr = (char*)_data + sizeof(_version);   // is there any padding ?
+  Debug("XEEPROMConfigClass::setName\n");
+  char* namePtr = (char*)_getDataPtr() + sizeof(_version);   // is there any padding ?
   strncpy(namePtr, name, NAME_MAX_LENGTH);
   *(namePtr + NAME_MAX_LENGTH) = 0;
 }
@@ -110,8 +103,8 @@ void XEEPROMConfigClass::setName(const char* name) {
  *
  */
 char* XEEPROMConfigClass::getName(void) {
-  //Serial.println("XEEPROMConfigClass::getName");
-  char* namePtr = (char*)_data + sizeof(_version);
+  Debug("XEEPROMConfigClass::getName\n");
+  char* namePtr = (char*)_getDataPtr() + sizeof(_version);
   return namePtr;
 }
 
@@ -120,27 +113,8 @@ char* XEEPROMConfigClass::getName(void) {
  *
  */
 unsigned int XEEPROMConfigClass::getDataSize(void) {
-  //Serial.println("XEEPROMConfigClass::getDataSize");
-  //Serial.println(_dataSize);
+  Debug("XEEPROMConfigClass::getDataSize: %d\n", _dataSize);
   return _dataSize;
-}
-
-/**
- * Get the data structure
- *
- */
-void* XEEPROMConfigClass::getData(void) {
-  //Serial.println("XEEPROMConfigClass::getData");
-  return _data;
-}
-
-/**
- * Set the data structure
- *
- */
-void XEEPROMConfigClass::setData(void* data) {
-  //Serial.println("XEEPROMConfigClass::setData");
-  _data = data;
 }
 
 /**
@@ -149,7 +123,16 @@ void XEEPROMConfigClass::setData(void* data) {
  *
  */
 void XEEPROMConfigClass::initFromDefault(void) {
-  //Serial.println("XEEPROMConfigClass::initFromDefault");
+  Debug("XEEPROMConfigClass::initFromDefault\n");
   setVersion(_version);
   setName(_name);
+}
+
+/**
+ * Return the pointer to the data structure object
+ *
+ */
+XEEPROMConfigDataStruct* XEEPROMConfigClass::_getDataPtr(void) {
+  Debug("XEEPROMConfigClass::_getDataPtr\n");
+  return (XEEPROMConfigDataStruct*)_data;
 }
