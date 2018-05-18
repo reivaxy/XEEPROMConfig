@@ -23,14 +23,14 @@ XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, unsigned int dataSi
  *
  */
 void XEEPROMConfigClass::init(void) {
-  Debug("XEEPROMConfigClass::init\n");
+  Debug("\n\nXEEPROMConfigClass::init\n");
   initFromEeprom();
   if (_version != getVersion()) {
-    Serial.println("EEprom not up to date");
+    Serial.println("\n\nEEprom not up to date");
     initFromDefault();
     saveToEeprom();    
   } else {
-    Serial.println("EEprom is up to date.");
+    Serial.println("\n\nEEprom is up to date.");
   }
 } 
 
