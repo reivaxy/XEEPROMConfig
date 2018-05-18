@@ -8,10 +8,7 @@
 #include <EEPROM.h>
 #include <Arduino.h>
 
-#define NAME_MAX_LENGTH 20
-
 //#define DEBUG_XEEPROM // Uncomment this to enable debug messages over serial port
-
 
 #ifdef DEBUG_XEEPROM
 #define Debug(...) Serial.printf(__VA_ARGS__)
@@ -19,24 +16,23 @@
 #define Debug(...)
 #endif
 
-// IMPORTANT WARNING: This structure needs to have a fixed size: no 'String', for instance
-// It will be serialialized to / deserialized from EEPROM.
+// IMPORTANT WARNING: This structure (and its extensions) needs to have a fixed size:
+// no 'String', for instance
+// It will be serialialized to / deserialized from EEPROM, byte by byte
 // First field needs to be an unsigned int to store the config version.
-// Second field needs to be char array to store a name
 struct XEEPROMConfigDataStruct {
   unsigned int version;
-  char name[NAME_MAX_LENGTH + 1];
 }; 
   
 class XEEPROMConfigClass {
 public:
-  XEEPROMConfigClass(unsigned int version, const char* name, unsigned int dataSize);
+  XEEPROMConfigClass(unsigned int version, unsigned int dataSize);
   
   void init(void);
   void initFromEeprom(void);
   void saveToEeprom(void);
-  char* getName(void);
-  void setName(const char*);
+  void saveToEeprom(byte* to);
+  void saveToEeprom(byte* from, byte* to);
   unsigned int getVersion(void);
   void setVersion(unsigned int);
   unsigned int getDataSize(void);
@@ -46,7 +42,6 @@ protected:
   byte *_data;
   XEEPROMConfigDataStruct* _getDataPtr(void);
   unsigned int _version;
-  char _name[NAME_MAX_LENGTH + 1];
   unsigned int _dataSize;
 };
 

@@ -9,14 +9,11 @@
 #include <Arduino.h>
 #include "XEEPROMConfig.h"
 
-XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, const char* name, unsigned int dataSize) {
-  Debug("XEEPROMConfigClass::XEEPROMConfigClass %d, %s, %d\n", version, name, dataSize);
+XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, unsigned int dataSize) {
+  Debug("XEEPROMConfigClass::XEEPROMConfigClass %d, %d\n", version, dataSize);
   _version = version;
   _dataSize = dataSize;
   _data = (byte*)malloc(dataSize);
-  // Copy name making sure there is no overflow
-  strncpy(_name, name, NAME_MAX_LENGTH);
-  _name[NAME_MAX_LENGTH] = 0;
 }
 
 /**
@@ -45,25 +42,59 @@ void XEEPROMConfigClass::initFromEeprom(void) {
   Debug("XEEPROMConfigClass::initFromEeprom\n");
   unsigned int sizeConfig = getDataSize();
   uint8_t* ptrConfig = (uint8_t *)_getDataPtr();
-  int i;
   EEPROM.begin(sizeConfig);
-  for(i = 0; i < sizeConfig; i++) {
+  for(unsigned int i = 0; i < sizeConfig; i++) {
     *(ptrConfig ++) = EEPROM.read(i);
   }
 }
 
 /**
- * Save the data structure to EEPROM byte by byte  
+ * Save the whole data structure to EEPROM byte by byte  
  *
  */
 void XEEPROMConfigClass::saveToEeprom(void) {
   Debug("XEEPROMConfigClass::saveToEeprom\n");
   unsigned int sizeConfig = getDataSize();
   byte* ptrConfig = (byte *)_getDataPtr();
+  for(unsigned int i = 0; i < sizeConfig; i++) {
+    EEPROM.write(i, *ptrConfig++);
+  }
+  EEPROM.commit();
+}
+
+/**
+ * Save data structure to EEPROM byte by byte up to given address  
+ *
+ */
+void XEEPROMConfigClass::saveToEeprom(byte* to) {
+  int count;
+  Debug("XEEPROMConfigClass::saveToEeprom\n");
+  unsigned int sizeConfig = getDataSize();
+  byte* ptrConfig = (byte *)_getDataPtr();
+  count = min(sizeConfig, to - ptrConfig);
   for(int i = 0; i < sizeConfig; i++) {
     EEPROM.write(i, *ptrConfig++);
   }
   EEPROM.commit();
+}
+
+/**
+ * Save data structure to EEPROM byte by byte 
+ * from given address up to given address  
+ *
+ */
+void XEEPROMConfigClass::saveToEeprom(byte* from, byte* to) {
+  Serial.println("XEEPROMConfigClass::saveToEeprom(from, to) is not implemented yet.");
+// TODO : implement !!
+//  int count;
+//  Debug("XEEPROMConfigClass::saveToEeprom\n");
+//  unsigned int sizeConfig = getDataSize();
+//  byte* ptrConfig = (byte *)_getDataPtr();
+//  count = min(sizeConfig, to - ptrConfig);
+//  for(int i = 0; i < sizeConfig; i++) {
+//    EEPROM.write(i, *ptrConfig++);
+//  }
+//  EEPROM.commit();
 }
 
 /**
@@ -88,27 +119,6 @@ unsigned int XEEPROMConfigClass::getVersion(void) {
 }
 
 /**
- * Set the name in the data structure
- *
- */
-void XEEPROMConfigClass::setName(const char* name) {
-  Debug("XEEPROMConfigClass::setName\n");
-  char* namePtr = (char*)_getDataPtr() + sizeof(_version);   // is there any padding ?
-  strncpy(namePtr, name, NAME_MAX_LENGTH);
-  *(namePtr + NAME_MAX_LENGTH) = 0;
-}
-
-/**
- * Get the name from the data structure
- *
- */
-char* XEEPROMConfigClass::getName(void) {
-  Debug("XEEPROMConfigClass::getName\n");
-  char* namePtr = (char*)_getDataPtr() + sizeof(_version);
-  return namePtr;
-}
-
-/**
  * Get the data structure size (it was provided at init)
  *
  */
@@ -125,7 +135,6 @@ unsigned int XEEPROMConfigClass::getDataSize(void) {
 void XEEPROMConfigClass::initFromDefault(void) {
   Debug("XEEPROMConfigClass::initFromDefault\n");
   setVersion(_version);
-  setName(_name);
 }
 
 /**
