@@ -9,23 +9,27 @@
 #include <Arduino.h>
 #include "XEEPROMConfig.h"
 
-XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, unsigned int dataSize) {
-  Debug("XEEPROMConfigClass::XEEPROMConfigClass %d, %d\n", version, dataSize);
+XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, const char* type, unsigned int dataSize) {
+  Debug("XEEPROMConfigClass::XEEPROMConfigClass %d, %s, %d\n", version, type, dataSize);
   _version = version;
   _dataSize = dataSize;
   _data = (byte*)malloc(dataSize);
+  // Copy type making sure there is no overflow
+  strncpy(_type, type, TYPE_MAX_LENGTH);
+  _type[TYPE_MAX_LENGTH] = 0;
 }
 
 /**
  * Initialize the data structure from the EEPROM content.
  * If the version is not the one expected (EEPROM content is obsolete, or was never initialized), initialize the data object
+ * or the type is not the one expected (flashing a module code on a board that has another type of module code)
  * from the default values, then save it to EEPROM
  *
  */
 void XEEPROMConfigClass::init(void) {
   Debug("\n\nXEEPROMConfigClass::init\n");
   initFromEeprom();
-  if (_version != getVersion()) {
+  if ((_version != getVersion()) || (0 != strcmp(_type, getType()))) {
     Serial.println("\n\nEEprom not up to date");
     initFromDefault();
     saveToEeprom();    
@@ -49,7 +53,7 @@ void XEEPROMConfigClass::initFromEeprom(void) {
 }
 
 /**
- * Save the whole data structure to EEPROM byte by byte  
+ * Save the data structure to EEPROM byte by byte  
  *
  */
 void XEEPROMConfigClass::saveToEeprom(void) {
@@ -119,6 +123,27 @@ unsigned int XEEPROMConfigClass::getVersion(void) {
 }
 
 /**
+ * Set the type in the data structure
+ *
+ */
+void XEEPROMConfigClass::setType(const char* type) {
+  Debug("XEEPROMConfigClass::setType\n");
+  char* typePtr = (char*)_getDataPtr() + sizeof(_version);   // is there any padding ?
+  strncpy(typePtr, type, TYPE_MAX_LENGTH);
+  *(typePtr + TYPE_MAX_LENGTH) = 0;
+}
+
+/**
+ * Get the type from the data structure
+ *
+ */
+char* XEEPROMConfigClass::getType(void) {
+  Debug("XEEPROMConfigClass::getType\n");
+  char* typePtr = (char*)_getDataPtr() + sizeof(_version);
+  return typePtr;
+}
+
+/**
  * Get the data structure size (it was provided at init)
  *
  */
@@ -129,12 +154,13 @@ unsigned int XEEPROMConfigClass::getDataSize(void) {
 
 /**
  * Init the data structure from the default values.
- * Subclass need to take care of initializing fields other than version and name
+ * Subclass need to take care of initializing fields other than version and type
  *
  */
 void XEEPROMConfigClass::initFromDefault(void) {
   Debug("XEEPROMConfigClass::initFromDefault\n");
   setVersion(_version);
+  setType(_type);
 }
 
 /**
