@@ -75,7 +75,7 @@ void XEEPROMConfigClass::saveToEeprom(byte* to) {
   Debug("XEEPROMConfigClass::saveToEeprom\n");
   unsigned int sizeConfig = getDataSize();
   byte* ptrConfig = (byte *)_getDataPtr();
-  count = min(sizeConfig, to - ptrConfig);
+  count = min(sizeConfig, (unsigned int)(to - ptrConfig));
   for(int i = 0; i < sizeConfig; i++) {
     EEPROM.write(i, *ptrConfig++);
   }
