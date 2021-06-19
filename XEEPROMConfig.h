@@ -37,15 +37,15 @@ public:
   void saveToEeprom(void);
   char* getType(void);
   void setType(const char*);
-  void saveToEeprom(byte* to);
-  void saveToEeprom(byte* from, byte* to); 
+  void saveToEeprom(unsigned char* to);
+  void saveToEeprom(unsigned char* from, unsigned char* to); 
   unsigned int getVersion(void);
   void setVersion(unsigned int);
   unsigned int getDataSize(void);
   virtual void initFromDefault(void);
   
 protected:
-  byte *_data;
+  unsigned char *_data;
   XEEPROMConfigDataStruct* _getDataPtr(void);
   unsigned int _version;
   char _type[TYPE_MAX_LENGTH + 1];

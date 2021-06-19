@@ -13,7 +13,7 @@ XEEPROMConfigClass::XEEPROMConfigClass(unsigned int version, const char* type, u
   Debug("XEEPROMConfigClass::XEEPROMConfigClass %d, %s, %d\n", version, type, dataSize);
   _version = version;
   _dataSize = dataSize;
-  _data = (byte*)malloc(dataSize);
+  _data = (unsigned char*)malloc(dataSize);
   // Copy type making sure there is no overflow
   strncpy(_type, type, TYPE_MAX_LENGTH);
   _type[TYPE_MAX_LENGTH] = 0;
@@ -39,7 +39,7 @@ void XEEPROMConfigClass::init(void) {
 } 
 
 /**
- * Read EEPROM byte by byte to initialize the data structure 
+ * Read EEPROM unsigned char by unsigned char to initialize the data structure 
  *
  */
 void XEEPROMConfigClass::initFromEeprom(void) {
@@ -53,13 +53,13 @@ void XEEPROMConfigClass::initFromEeprom(void) {
 }
 
 /**
- * Save the data structure to EEPROM byte by byte  
+ * Save the data structure to EEPROM unsigned char by unsigned char  
  *
  */
 void XEEPROMConfigClass::saveToEeprom(void) {
   Debug("XEEPROMConfigClass::saveToEeprom\n");
   unsigned int sizeConfig = getDataSize();
-  byte* ptrConfig = (byte *)_getDataPtr();
+  unsigned char* ptrConfig = (unsigned char *)_getDataPtr();
   for(unsigned int i = 0; i < sizeConfig; i++) {
     EEPROM.write(i, *ptrConfig++);
   }
@@ -67,33 +67,33 @@ void XEEPROMConfigClass::saveToEeprom(void) {
 }
 
 /**
- * Save data structure to EEPROM byte by byte up to given address  
+ * Save data structure to EEPROM unsigned char by unsigned char up to given address  
  *
  */
-void XEEPROMConfigClass::saveToEeprom(byte* to) {
-  int count;
-  Debug("XEEPROMConfigClass::saveToEeprom\n");
-  unsigned int sizeConfig = getDataSize();
-  byte* ptrConfig = (byte *)_getDataPtr();
-  count = min(sizeConfig, (unsigned int)(to - ptrConfig));
-  for(int i = 0; i < sizeConfig; i++) {
-    EEPROM.write(i, *ptrConfig++);
-  }
-  EEPROM.commit();
+void XEEPROMConfigClass::saveToEeprom(unsigned char* to) {
+  Serial.println("XEEPROMConfigClass::saveToEeprom(to) is not implemented yet.");
+// TODO : implement !!
+//  Debug("XEEPROMConfigClass::saveToEeprom\n");
+//  unsigned int sizeConfig = getDataSize();
+//  unsigned char* ptrConfig = (unsigned char *)_getDataPtr();
+//  for(unsigned int i = 0; i < sizeConfig; i++) {
+//    EEPROM.write(i, *ptrConfig++);
+//  }
+//  EEPROM.commit();
 }
 
 /**
- * Save data structure to EEPROM byte by byte 
+ * Save data structure to EEPROM unsigned char by unsigned char 
  * from given address up to given address  
  *
  */
-void XEEPROMConfigClass::saveToEeprom(byte* from, byte* to) {
+void XEEPROMConfigClass::saveToEeprom(unsigned char* from, unsigned char* to) {
   Serial.println("XEEPROMConfigClass::saveToEeprom(from, to) is not implemented yet.");
 // TODO : implement !!
 //  int count;
 //  Debug("XEEPROMConfigClass::saveToEeprom\n");
 //  unsigned int sizeConfig = getDataSize();
-//  byte* ptrConfig = (byte *)_getDataPtr();
+//  unsigned char* ptrConfig = (unsigned char *)_getDataPtr();
 //  count = min(sizeConfig, to - ptrConfig);
 //  for(int i = 0; i < sizeConfig; i++) {
 //    EEPROM.write(i, *ptrConfig++);
